@@ -1,0 +1,3 @@
+open rdp://Administrator:kF\;\&8MrJao@ec2-34-203-210-68.compute-1.amazonaws.com
+
+Remember to escape any illegal characters like ; or &. 

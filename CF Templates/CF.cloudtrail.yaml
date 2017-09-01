@@ -1,0 +1,46 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  BucketName:
+    Description: Name of the S3 bucket.
+    Type: String
+  TopicName:
+    Description: Name of the SNS topic.
+    Type: String
+    Default: ''
+  IncludeGlobalServiceEvents:
+    Description: Indicates whether the trail is publishing events from global services,
+      such as IAM, to the log files.
+    Type: String
+    Default: 'true'
+    AllowedValues:
+    - 'true'
+    - 'false'
+Conditions:
+  UseSNSTopic:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: TopicName
+      - ''
+Resources:
+  Trail:
+    Type: AWS::CloudTrail::Trail
+    Properties:
+      IncludeGlobalServiceEvents:
+        Ref: IncludeGlobalServiceEvents
+      S3BucketName:
+        Ref: BucketName
+      SnsTopicName:
+        Fn::If:
+        - UseSNSTopic
+        - Ref: TopicName
+        - Ref: AWS::NoValue
+      IsLogging: true
+      IsMultiRegionTrail: true
+
+# Future Additions
+  # Create your SNS Topic here
+  # Create your S3 bucket as well
+  # Assign permissions to your S3 bucket
+  # Assign permissions to SNS topic
+  # Add tagging

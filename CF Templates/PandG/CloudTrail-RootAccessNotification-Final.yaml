@@ -1,0 +1,82 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation Template for Root-access account alerts."
+# This template takes the
+
+Parameters:
+  LogGroup:
+    Description: "A pre-existing Log Group in the Account/Region"
+    Type: String
+  NotificationsEmail:
+    Description: "Email address to notify when new logs are published."
+    Type: String
+
+Resources:
+
+  Topic:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      Subscription: #subscription defined inline
+        -
+          Endpoint:
+            Ref: NotificationsEmail
+          Protocol: email
+      TopicName: "RootAccessNotification"
+
+  TopicPolicy:
+    DependsOn: Topic
+    Type: "AWS::SNS::TopicPolicy"
+    Properties:
+      Topics:
+        - Ref: "Topic"
+      PolicyDocument:
+        Version: "2008-10-17"
+        Statement:
+          -
+            Sid: "AWSCloudTrailSNSPolicy"
+            Effect: "Allow"
+            Principal:
+              Service: "cloudtrail.amazonaws.com"
+            Resource: "*"
+            Action: "sns:Publish"
+
+  MetricFilter:
+    Type: "AWS::Logs::MetricFilter"
+    Properties:
+      FilterPattern: "{ $.userIdentity.userName = \"Root\" && $.userIdentity.invokedBy NOT EXISTS && $.eventType = \"ConsoleLogin\" }"
+      LogGroupName: !Ref LogGroup
+      MetricTransformations:
+        -
+          MetricValue: "1"
+          MetricNamespace: "CloudTrailMetrics"
+          MetricName: "RootAccountUsageCount"
+
+  #Trail:
+  #  DependsOn: TopicPolicy
+  #  Type: "AWS::CloudTrail::Trail"
+  #  Properties:
+  #    IsMultiRegionTrail: true #means trail is created only in the region of the stack
+  #    SnsTopicName:
+  #      Fn::GetAtt:
+  #        - Topic
+  #        - TopicName
+  #    IsLogging: true
+  #    S3BucketName: "pg-security-cloud-trails-all-accounts"
+
+  Alarm:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      ActionsEnabled: true
+      AlarmDescription: "Notifies when someone logs in using Root account"
+      AlarmName: "RootAccountUsageAlarm"
+      AlarmActions:
+        - Ref: "Topic"
+      MetricName: "RootAccountUsageCount"
+      Namespace: "CloudTrailMetrics"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Period: 60 #seconds = 1min
+      Statistic: "Sum"
+      Threshold: 0
+      Unit: "Seconds"
+

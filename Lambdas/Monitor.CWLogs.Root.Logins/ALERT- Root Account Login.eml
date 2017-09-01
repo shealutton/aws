@@ -1,0 +1,63 @@
+Received: from gadc-mlb101.na.pg.com (155.111.176.138) by
+ GADC-EHT007.na.pg.com (155.111.176.95) with Microsoft SMTP Server (TLS) id
+ 14.3.319.2; Fri, 31 Mar 2017 12:16:05 -0400
+Received: from localhost (localhost [127.0.0.1])	by gadc-mlb101.na.pg.com
+ (Postfix) with ESMTP id 76CCF268007	for <astorga.a@pg.com>; Fri, 31 Mar 2017
+ 12:16:05 -0400 (EDT)
+Received: from gadc-mlb101.na.pg.com ([155.111.176.138])	by localhost
+ (amavisd-new.pg.com [127.0.0.1]) (amavisd-new, port 20024)	with ESMTP id
+ 3elfDbib0ZV7 for <astorga.a@pg.com>;	Fri, 31 Mar 2017 12:16:05 -0400 (EDT)
+Received: from gadc-mle001.localdomain (gadc-mle001.na.pg.com
+ [155.111.241.12])	by gadc-mlb101.na.pg.com (Postfix) with ESMTPS id
+ 593B7268003	for <astorga.a@pg.com>; Fri, 31 Mar 2017 12:16:05 -0400 (EDT)
+Received: from localhost (localhost [127.0.0.1])	by gadc-mle001.localdomain
+ (Postfix) with ESMTP id 5181A2F8009	for <astorga.a@pg.com>; Fri, 31 Mar 2017
+ 12:16:05 -0400 (EDT)
+Received: from gadc-mle101.na.pg.com ([168.87.163.10])	by localhost
+ (amavisd-new.pg.com [127.0.0.1]) (amavisd-new, port 10024)	with ESMTP id
+ LNd+0LWteXxt for <astorga.a@pg.com>;	Fri, 31 Mar 2017 12:16:05 -0400 (EDT)
+Received: from mail6.bemta12.messagelabs.com (mail6.bemta12.messagelabs.com
+ [216.82.250.247])	by gadc-mle101.na.pg.com (Postfix) with ESMTPS id
+ 2216F130006	for <astorga.a@pg.com>; Fri, 31 Mar 2017 12:16:05 -0400 (EDT)
+Received: from [216.82.249.131] by server-13.bemta-12.messagelabs.com id
+ B6/E4-18042-5C08ED85; Fri, 31 Mar 2017 16:16:05 +0000
+Received: (qmail 2704 invoked from network); 31 Mar 2017 16:16:02 -0000
+Received: from a10-43.smtp-out.amazonses.com (HELO
+ a10-43.smtp-out.amazonses.com) (54.240.10.43)  by
+ server-2.tower-28.messagelabs.com with AES128-SHA encrypted SMTP; 31 Mar 2017
+ 16:16:02 -0000
+From: AWS Notifications <no-reply@sns.amazonaws.com>
+To: "Astorga, Andres" <astorga.a@pg.com>
+Subject: ALERT: Root Account Login
+Thread-Topic: ALERT: Root Account Login
+Thread-Index: AQHSqjoZqlidIp4fOkqvp1SpesPA3w==
+Date: Fri, 31 Mar 2017 16:16:01 +0000
+Message-ID: <0100015b2526f2b2-9f261d7b-126a-43c5-a0af-91795a4a656c-000000@email.amazonses.com>
+Content-Language: en-US
+X-MS-Exchange-Organization-AuthSource: GADC-EHT007.na.pg.com
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-virus-scanned: amavisd-new at pg.com
+x-originating-ip: [54.240.10.43]
+dkim-signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=224i4yxa5dv7c2xz3womw6peuasteono; d=amazonses.com; t=1490976961;
+	h=Date:From:To:Message-ID:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Feedback-ID;
+	bh=XTwlCLPIjTFmClmXXKw1tUHqSofx2OJ/Wmgg8hPGxoo=;
+	b=dMLtORf5Ux3r0ET14xWn0Ug5lE2bu+EjfURwzku13Dh/3zDlyqH0s41YC+X8F3Jx
+	B24j6o7czvEtREmXzXylR3e8B6a7ikuGll9i/TSJpyHhVwosrc0pX42RCzt1sGF/D9I
+	YY3E4vIiMezodT2avMzISnIJCWb8j4OoE0m+slis=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <B3BE93513DF094488E3AF7329E13B977@exchangemail.pg.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+
+QSByb290IGxvZ2luIHdhcyBkZXRlY3RlZCBpbiB0aGUgZm9sbG93aW5nIGFjY291bnQocyk6LCBQ
+Ry1TZWN1cml0eSAoMzI0NzIyMzY0MTMyKQ0KDQotLQ0KSWYgeW91IHdpc2ggdG8gc3RvcCByZWNl
+aXZpbmcgbm90aWZpY2F0aW9ucyBmcm9tIHRoaXMgdG9waWMsIHBsZWFzZSBjbGljayBvciB2aXNp
+dCB0aGUgbGluayBiZWxvdyB0byB1bnN1YnNjcmliZToNCmh0dHBzOi8vc25zLnVzLWVhc3QtMS5h
+bWF6b25hd3MuY29tL3Vuc3Vic2NyaWJlLmh0bWw/U3Vic2NyaXB0aW9uQXJuPWFybjphd3M6c25z
+OnVzLWVhc3QtMTozMjQ3MjIzNjQxMzI6Um9vdEFjY2Vzc05vdGlmaWNhdGlvbjphMWJkMmY1NS1h
+NDNhLTQ2MmQtOWU4OC1lMzJjMTBjM2Q4MWImRW5kcG9pbnQ9YXN0b3JnYS5hQHBnLmNvbQ0KDQpQ
+bGVhc2UgZG8gbm90IHJlcGx5IGRpcmVjdGx5IHRvIHRoaXMgZW1haWwuIElmIHlvdSBoYXZlIGFu
+eSBxdWVzdGlvbnMgb3IgY29tbWVudHMgcmVnYXJkaW5nIHRoaXMgZW1haWwsIHBsZWFzZSBjb250
+YWN0IHVzIGF0IGh0dHBzOi8vYXdzLmFtYXpvbi5jb20vc3VwcG9ydA0K

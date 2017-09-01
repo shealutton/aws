@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creates the EC2::FlowLog for one VPC pointing to the Logs::Destination previously created in Security account.
+Parameters:
+  VpcId:
+    Description: VPC ID to import (exported value from VPC stack).
+    Type: String
+  VpcFlowCloudWatchLogDestinationArn:
+    Description: ARN for the VPC Flow Logs Cloud Watch Destination in the Security Account.
+    Type: String
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join ['', ["LogGroup-", !Ref "VpcId"]]
+      RetentionInDays: 7
+  LogRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - 
+            Effect: Allow
+            Principal:
+              Service:
+                - vpc-flow-logs.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      Policies:
+        - 
+          PolicyName: !Sub CloudWatchLogRolePolicy-${AWS::StackName}
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - 
+                Effect: Allow
+                Action: 
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                Resource: "*"
+  FlowLog:
+    Type: AWS::EC2::FlowLog
+    DependsOn: LogRole
+    Properties:
+      DeliverLogsPermissionArn: !GetAtt LogRole.Arn
+      LogGroupName: !Join ['', ["LogGroup-", !Ref "VpcId"]]
+      ResourceId: !ImportValue
+        Ref: VpcId
+      ResourceType: VPC
+      TrafficType: ALL
+  LogSubscriptionFilter:
+    Type: "AWS::Logs::SubscriptionFilter"
+    DependsOn: FlowLog
+    Properties:
+      LogGroupName: !Ref LogGroup
+      FilterPattern: ""
+      DestinationArn: !Ref VpcFlowCloudWatchLogDestinationArn
+Outputs:
+  VpcFlowLogCloudWatchLogGroup:
+    Description: VPC FlowLogs CloudWatch Log Group
+    Value: !Ref LogGroup
+    Export:
+      Name: !Join ['', ["LogGroup-", !Ref "VpcId"]]

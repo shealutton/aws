@@ -1,0 +1,110 @@
+How To:
+
+
+MANUAL STEPS
+1. Create burner account
+2. Create user by hand with keys and admin access
+3. Add creds to local .aws/c* files
+S3 Bucket creation and upload
+
+
+# Created Already:
+BUCKET=clientpresentation
+
+# New Account:
+BUCKET=sl-burnertemp3
+
+  aws s3api create-bucket --acl private --bucket ${BUCKET} --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2	
+  aws ec2 create-key-pair --key-name ${BUCKET}-temp --query 'KeyMaterial' --output text > ~/Documents/SSL/${BUCKET}-temp.pem
+  chmod 600 ~/Documents/SSL/${BUCKET}-temp.pem
+  aws s3 cp ~/Documents/src/CF\ Templates/CF.IAM.yaml s3://${BUCKET}/
+  aws s3 cp ~/Documents/src/CF\ Templates/CF.VPC.yaml s3://${BUCKET}/
+  aws s3 cp ~/Documents/src/CF\ Templates/CF.IAM.Cognito.json s3://${BUCKET}/
+
+
+#CF stack creation
+  aws cloudformation create-stack --stack-name CF-Client-IAM --template-url https://s3-us-west-2.amazonaws.com/${BUCKET}/CF.IAM.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=ClientUserPassword,ParameterValue=123YourMom
+  aws cloudformation create-stack --stack-name CF-Client-VPC --template-url https://s3-us-west-2.amazonaws.com/${BUCKET}/CF.VPC.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=ClientKeyPair,ParameterValue=${BUCKET}-temp
+
+  aws cloudformation create-stack --stack-name CF-Client-IAM-Cognito --template-url https://s3-us-west-2.amazonaws.com/${BUCKET}/CF.IAM.Cognito.json --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=Username,ParameterValue=Kinesis-Cognito-user ParameterKey=Password,ParameterValue=ganges9302Wellness
+
+
+  aws cloudformation list-stacks
+  aws cloudformation delete-stack --stack-name CF-Client-IAM
+  aws cloudformation update-stack --stack-name CF-Client-VPC --template-url https://s3-us-west-2.amazonaws.com/${BUCKET}/CF.VPC.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=ClientKeyPair,ParameterValue=${BUCKET}-temp
+
+
+#-------------------------------
+aws --region us—west-2 lambda delete-function --function-name Kinesis-to-Postgres
+
+aws lambda create-function \
+--region us-west-2 \
+--function-name Kinesis-to-Postgres \
+--zip-file fileb:///Users/shealutt/Documents/src/Lambdas/Kinesis-to-Postgres/Kinesis-to-Postgres5.zip \
+--role arn:aws:iam::862173490573:role/Lambda-Full-Access \
+--handler lambda_function.lambda_handler \
+--runtime python2.7 \
+--timeout 10 \
+--memory-size 256
+
+
+
+{{date.now}},{{random.number({"min":1000000,"max":10000000})}},{{random.number({"min":1000000,"max":10000000})}},{{random.number({"min":1000000,"max":10000000})}},{{random.number({"min":1000000,"max":10000000})}},{{internet.ip}},{{random.weightedArrayElement(
+  {
+    "weights": [0.47,0.23,0.14,0.06,0.05,0.02,0.02,0.02],
+    "data": ["ge","zn","zf","ft","zb","zq","ub","tn"]
+  }
+)}},{{random.weightedArrayElement(
+  {
+    "weights": [0.42,0.38,0.15,0.04,0.01],
+    "data": ["1","10","100","1000","10000"]
+  }
+)}},{{commerce.price}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from __future__ import print_function
+
+import base64
+import json
+import psycopg2
+
+print('Loading function')
+
+
+def lambda_handler(event, context):
+    #print("Received event: " + json.dumps(event, indent=2))
+    # Body:
+    # 2017-04-20T10:51:35-05:00,1516685,3821752,7352132,224.41.96.118,ge,499.00
+    conn = psycopg2.connect(host='client.chhgjax8j1c6.us-west-2.rds.amazonaws.com', dbname='client', user='client',
+                            password='ganges-9302-Wellness')
+    cur = conn.cursor()
+
+    sql = 'INSERT INTO testdata (tradeID, firmID, accountID, clearingfirmID, ip, instrument, quantity, price) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+    # Loop, inserting any data we receive
+
+    for record in event['Records']:
+        # Kinesis data is base64 encoded so decode here
+        payload = base64.b64decode(record['kinesis']['data']).rstrip()
+        items = payload.split(',')
+        print("Items:", len(items), items)
+        cur.execute(sql, (items[1],items[2],items[3],items[4],items[5],items[6],items[7],items[8]))
+        conn.commit()
+    return 'Successfully processed {} records.'.format(len(event['Records']))

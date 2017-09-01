@@ -1,0 +1,12 @@
+{{date.now}},{{random.number({"min":1000000,"max":10000000})}},{{random.number({"min":1000000,"max":10000000})}},{{random.number({"min":1000000,"max":10000000})}},{{random.number({"min":1000000,"max":10000000})}},{{internet.ip}},{{random.weightedArrayElement(
+  {
+    "weights": [0.47,0.23,0.14,0.06,0.05,0.02,0.02,0.02],
+    "data": ["ge","zn","zf","ft","zb","zq","ub","tn"]
+  }
+)}},{{random.weightedArrayElement(
+  {
+    "weights": [0.42,0.38,0.15,0.04,0.01],
+    "data": ["1","10","100","1000","10000"]
+  }
+)}},{{commerce.price}}
+

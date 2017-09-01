@@ -1,0 +1,13 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+# Reqs, create VPC, create IGW, attach IGW to VPC, create Subnets, add routes
+Description: "A Kinesis stream and a Lambda."
+#Parameters:
+Resources:
+  KinesisStream:
+    Type: "AWS::Kinesis::Stream"
+    Properties:
+      Name: "KinesisToLambda"
+      ShardCount: 50
+
+#Outputs:

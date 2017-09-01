@@ -1,0 +1,133 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+    "Parameters": {
+        "VpcFlowLogsBucketArn" : {
+            "Description": "Arn of the S3 Bucket for storing VPC Flow Logs",
+            "Type": "String"
+        },
+        "SourceAccountId" : {
+            "Description": "Id of the Account from where the Flow Logs will come",
+            "Type": "String"
+        },
+        "SourceVpcName" : {
+            "Description": "Name of the VPC from where the Flow Logs will come",
+            "Type": "String"
+        }
+    },
+    "Resources" : {
+        "S3DeliveryRole" : {
+            "Type": "AWS::IAM::Role",
+            "Properties" : {
+                "AssumeRolePolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [ "firehose.amazonaws.com" ]
+                        },
+                        "Action": [ "sts:AssumeRole" ]
+                    } ]
+                },
+                "Policies": [ {
+                    "PolicyName": "CentralizedVpcFlowLogsS3BucketDeliveryPolicy",
+                    "PolicyDocument": {
+                        "Version" : "2012-10-17",
+                        "Statement": [ {
+                            "Effect": "Allow",
+                            "Action": "s3:PutObject",
+                            "Resource": { "Fn::Join" : ["", [ { "Ref" : "VpcFlowLogsBucketArn" }, "/", { "Ref" : "SourceVpcName" }, "/*" ]] }
+                        } ]
+                    }
+               } ]
+            }
+        },
+        "VpcFlowFirehose" : {
+            "Type" : "AWS::KinesisFirehose::DeliveryStream",
+            "Properties" : {
+                "DeliveryStreamName" : { "Fn::Join" : ["", ["VpcFlowFirehose-", { "Ref" : "SourceVpcName"}]] },
+                "S3DestinationConfiguration" : {
+                    "BucketARN" : { "Ref" : "VpcFlowLogsBucketArn" },
+                    "BufferingHints" : {
+                        "IntervalInSeconds" : 300,
+                        "SizeInMBs" : 5
+                    },
+                    "CompressionFormat" : "UNCOMPRESSED",
+                    "Prefix" : { "Fn::Join" : ["", [ { "Ref" : "SourceVpcName" }, "/" ]] },
+                    "RoleARN": { "Fn::GetAtt" : ["S3DeliveryRole", "Arn"] }
+                }
+            }
+        },
+        "VpcFlowFirehoseDeliveryRole" : {
+            "Type": "AWS::IAM::Role",
+            "Properties" : {
+                "AssumeRolePolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [ "logs.us-east-2.amazonaws.com" ]
+                        },
+                        "Action": [ "sts:AssumeRole" ]
+                    }]
+                },
+                "Policies": [ {
+                    "PolicyName": "CentralizedVpcFlowLogsFirehoseDeliveryPolicy",
+                    "PolicyDocument": {
+                        "Version" : "2012-10-17",
+                        "Statement": [ {
+                            "Effect": "Allow",
+                            "Action": "firehose:PutRecord",
+                            "Resource": {
+                                "Fn::Join" : [ "", [ 
+                                    "arn:aws:firehose:",
+                                    "us-east-2",
+                                    ":",
+                                    {"Ref" : "AWS::AccountId"},
+                                    ":deliverystream/",
+                                    {"Ref" : "VpcFlowFirehose"} ] ]
+                            }
+                        }]
+                    }
+               } ]
+            }
+        },
+        "VpcFlowCloudWatchDestination" : {
+            "Type" : "AWS::Logs::Destination",
+            "Properties" : {
+                "DestinationName": { "Fn::Join" : ["", [ "VpcFlowCloudWatchDestination-", { "Ref" :"SourceVpcName"} ]] },
+                "RoleArn": { "Fn::GetAtt" : ["VpcFlowFirehoseDeliveryRole", "Arn"] },
+                "TargetArn": {
+                    "Fn::Join" : [ "", [ 
+                        "arn:aws:firehose:",
+                        "us-east-2",
+                        ":",
+                        {"Ref" : "AWS::AccountId"},
+                        ":deliverystream/",
+                        {"Ref" : "VpcFlowFirehose"} ] ]
+                },
+                "DestinationPolicy": {
+                    "Fn::Join" : [ "", [ 
+                        "{\"Version\" : \"2012-10-17\",",
+                        "\"Statement\" : [ {",
+                        "\"Sid\" : \"\",",
+                        "\"Effect\" : \"Allow\",",
+                        "\"Principal\" : ",
+                        "{ \"AWS\" : \"",{"Ref" : "SourceAccountId"},"\"},",
+                        "\"Action\" : \"logs:PutSubscriptionFilter\",\"Resource\": \"",
+                        "arn:aws:logs:us-east-2:324722364132:destination:VpcFlowCloudWatchDestination-",{ "Ref" :"SourceVpcName"},
+                        "\"}]}" ] ]
+                }
+            }
+        }
+    },
+    "Outputs" : {
+        "VpcFlowFirehose" : {
+            "Value" : { "Ref" : "VpcFlowFirehose" },
+            "Description" : "Firehose delivery stream for VPC Flow Logs"
+        },
+        "FirehoseDestinationArn" : {
+            "Value" : { "Fn::Join" : ["", ["arn:aws:logs:us-east-2:324722364132:destination:VpcFlowCloudWatchDestination-", { "Ref" :"SourceVpcName"}]] },
+            "Description" : "Arn of the Firehose destination that was created."
+        }
+    }
+}

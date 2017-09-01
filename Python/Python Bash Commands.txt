@@ -1,0 +1,29 @@
+time python python.inserter.psql &
+time python python.inserter.psql & 
+time python python.inserter.psql &
+time python python.inserter.psql & 
+time python python.inserter.psql &
+time python python.inserter.psql & 
+time python python.inserter.psql &
+time python python.inserter.psql & 
+time python python.inserter.psql &
+time python python.inserter.psql & 
+
+
+scp -i Documents/SSL/clientpresentation-temp.pem starter.bsh ec2-user@ec2-52-55-28-0.compute-1.amazonaws.com:~
+scp -i Documents/SSL/clientpresentation-temp.pem starter.bsh ec2-user@ec2-34-201-220-116.compute-1.amazonaws.com:~
+scp -i Documents/SSL/clientpresentation-temp.pem starter.bsh ec2-user@ec2-54-165-82-175.compute-1.amazonaws.com:~
+scp -i Documents/SSL/clientpresentation-temp.pem starter.bsh ec2-user@ec2-54-162-28-87.compute-1.amazonaws.com:~
+scp -i Documents/SSL/clientpresentation-temp.pem starter.bsh ec2-user@ec2-34-229-250-26.compute-1.amazonaws.com:~
+scp -i Documents/SSL/clientpresentation-temp.pem starter.bsh ec2-user@ec2-54-211-98-255.compute-1.amazonaws.com:~
+
+scp -i Documents/SSL/clientpresentation-temp.pem python.inserter.psql ec2-user@ec2-52-55-28-0.compute-1.amazonaws.com:~
+scp -i Documents/SSL/clientpresentation-temp.pem python.inserter.psql ec2-user@ec2-34-201-220-116.compute-1.amazonaws.com:~
+scp -i Documents/SSL/clientpresentation-temp.pem python.inserter.psql ec2-user@ec2-54-165-82-175.compute-1.amazonaws.com:~
+scp -i Documents/SSL/clientpresentation-temp.pem python.inserter.psql ec2-user@ec2-54-162-28-87.compute-1.amazonaws.com:~
+scp -i Documents/SSL/clientpresentation-temp.pem python.inserter.psql ec2-user@ec2-34-229-250-26.compute-1.amazonaws.com:~
+scp -i Documents/SSL/clientpresentation-temp.pem python.inserter.psql ec2-user@ec2-54-211-98-255.compute-1.amazonaws.com:~
+
+
+ec2-34-229-250-26.compute-1.amazonaws.com
+ec2-54-211-98-255.compute-1.amazonaws.com

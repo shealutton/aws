@@ -1,0 +1,214 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+# Reqs, create VPC, create IGW, attach IGW to VPC, create Subnets, add routes
+Description: "A Primary VPC, two subnets, and IGW."
+Mappings:
+  RegionMap:
+    us-east-1:
+      "64": "ami-c58c1dd3"
+    us-east-2:
+      "64": "ami-4191b524"
+    us-west-1:
+      "64": "ami-7a85a01a"
+    us-west-2:
+      "64": "ami-4836a428"
+
+Parameters:
+  ClientKeyPair:
+    Description: Amazon EC2 Key Pair
+    Default: t2.micro
+    Type: "AWS::EC2::KeyPair::KeyName"
+
+Resources:
+  PrimaryVPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: "10.200.0.0/16"
+      EnableDnsSupport: True
+      EnableDnsHostnames: True
+      InstanceTenancy: "default"
+      Tags:
+        - Key: Name
+          Value: PrimaryVPC
+
+  PrimaryIGW:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+      - Key: Name
+        Value: PrimaryIGW
+
+  AttachPrimaryIGW:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: PrimaryVPC
+      InternetGatewayId:
+        Ref: PrimaryIGW
+
+  PublicSubnetA:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+        - 0
+        - Fn::GetAZs: ""
+      CidrBlock: "10.200.10.0/24"
+      MapPublicIpOnLaunch: True
+      Tags:
+        - Key: Name
+          Value: "Public Subnet A"
+      VpcId:
+        Ref: PrimaryVPC
+
+  PublicSubnetB:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+        - 1
+        - Fn::GetAZs: ""
+      CidrBlock: "10.200.20.0/24"
+      MapPublicIpOnLaunch: True
+      Tags:
+        - Key: Name
+          Value: "Public Subnet A"
+      VpcId:
+        Ref: PrimaryVPC
+
+  PublicSubnetD:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+        - 3
+        - Fn::GetAZs: ""
+      CidrBlock: "10.200.40.0/24"
+      MapPublicIpOnLaunch: True
+      Tags:
+        - Key: Name
+          Value: "Public Subnet A"
+      VpcId:
+        Ref: PrimaryVPC
+
+  PrivateSubnetA:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+        - 0
+        - Fn::GetAZs: ""
+      CidrBlock: "10.200.11.0/24"
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: "Private Subnet A"
+      VpcId:
+        Ref: PrimaryVPC
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: PrimaryVPC
+      Tags:
+      - Key: Name
+        Value: PublicRouteTable
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: PrimaryIGW
+    Properties:
+      RouteTableId:
+        Ref: PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: PrimaryIGW
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: PublicSubnetA
+      RouteTableId:
+        Ref: PublicRouteTable
+
+  AssociatePublicSubnetToIGW:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: PublicSubnetA
+      RouteTableId:
+        Ref: PublicRouteTable
+
+  PublicEC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: !FindInMap [ RegionMap, !Ref "AWS::Region", 64 ]
+      KeyName: !Ref ClientKeyPair
+      InstanceType: "t2.small"
+      Tags:
+        - Key: Name
+          Value: PublicEC2Temp
+      SecurityGroupIds:
+      - Ref: SSHSecurityGroup
+      SubnetId:
+        Ref: PublicSubnetA
+
+  SSHSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "Allow SSH access"
+      VpcId:
+        Ref: PrimaryVPC
+      SecurityGroupIngress:
+      - IpProtocol: 'tcp'
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: 205.0.0.0/8
+      - IpProtocol: 'tcp'
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: 54.0.0.0/8
+      - IpProtocol: 'tcp'
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: 72.0.0.0/8
+
+
+Outputs:
+  PublicSubnetA:
+    Description: "The subnet ID for public instances"
+    Value:
+      Ref: PublicSubnetA
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-PublicSubnetA
+  PrivateSubnetA:
+    Description: "The subnet ID for private instances"
+    Value:
+      Ref: PrivateSubnetA
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-PrivateSubnetA
+  PublicRouteTable:
+    Description: "The ID for the public route table"
+    Value:
+      Ref: PublicRouteTable
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-PublicRouteTable
+  PrimaryIGW:
+    Description: "The primary internet gateway"
+    Value:
+      Ref: PrimaryIGW
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-PrimaryIGW
+  PrimaryVPC:
+    Description: "The primary VPC"
+    Value:
+      Ref: PrimaryVPC
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-PrimaryVPC

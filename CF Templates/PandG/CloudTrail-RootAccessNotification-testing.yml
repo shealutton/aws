@@ -1,0 +1,101 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation Template for Root-access account alerts."
+Parameters:
+  Account:
+    Description: "Name of the P&G Account (e.g. Enterprise, Security, etc)."
+    Type: String
+  Environment:
+    Description: "Environment in question."
+    Type: String
+    AllowedValues:
+      - PROD
+      - DR
+      - NONPROD
+  Region:
+    Description: "Region in question."
+    Type: String
+    AllowedValues:
+      - US-EAST-1
+      - US-EAST-2 #used for DR
+      - EU-CENTRAL-1
+      - AP-SOUTHEAST-1
+  NotificationsEmail: 
+    Description: "Email address to notify when new logs are published."
+    Type: String
+Resources:
+
+  ### I am creating these in us-east-1, there are hard coded elements for that region in this template - Shea
+
+  # Topic seems OK - Shea
+  Topic:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      Subscription: #subscription defined inline
+        -
+          Endpoint:
+            Ref: NotificationsEmail
+          Protocol: email
+      TopicName: "RootKeyAccessNotification"
+
+  ### This is working if there are DependsOn statements - Shea
+  TopicPolicy:
+    DependsOn: Topic
+    Type: "AWS::SNS::TopicPolicy"
+    Properties:
+      Topics:
+        - Ref: "Topic"
+      PolicyDocument:
+        Version: "2008-10-17"
+        Statement:
+          -
+            Sid: "AWSCloudTrailSNSPolicy"
+            Effect: "Allow"
+            Principal:
+              Service: "cloudtrail.amazonaws.com"
+            Resource: "*"
+            Action: "sns:Publish"
+
+  # Metric filter looks ok so far. Shea
+  MetricFilter:
+    Type: "AWS::Logs::MetricFilter"
+    Properties:
+      # FilterPattern: "{ $.userIdentity.type = \"root\" }"
+      # Using my login to be able to verify functionality. Shea
+      FilterPattern: "{ $.userIdentity.userName = \"shealutt@amazon.com\" }"
+      LogGroupName: "Security-Account-Cloud-Trail-LogGroup-15KVT9I45VF91"
+      MetricTransformations:
+        - 
+          MetricValue: "1"
+          MetricNamespace: "CloudTrailMetrics"
+          MetricName: "RootAccountUsageCount"
+
+  Trail:
+    DependsOn: TopicPolicy
+    Type: "AWS::CloudTrail::Trail"
+    Properties:
+      IsMultiRegionTrail: false #means trail is created only in the region of the stack
+      SnsTopicName:
+        Fn::GetAtt: 
+          - Topic
+          - TopicName
+      IsLogging: true
+      S3BucketName: "pg-security-cloud-trails-all-accounts"
+
+  # Alarm seems ok - Shea
+  Alarm:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      ActionsEnabled: true
+      AlarmDescription: "Notifies when someone logs in using Root account"
+      AlarmName: "Root account usage alarm"
+      AlarmActions:
+        - Ref: "Topic"
+      MetricName: "RootAccountUsageCount"
+      Namespace: "CloudTrailMetrics"
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Period: 60 #seconds = 1min
+      Statistic: "Sum"
+      Threshold: 0
+      Unit: "Seconds"

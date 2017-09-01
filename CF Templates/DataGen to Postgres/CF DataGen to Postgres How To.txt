@@ -1,0 +1,78 @@
+How To:
+
+
+MANUAL STEPS
+1. Create burner account
+2. Create user by hand with keys and admin access
+3. Add creds to local .aws/c* files
+S3 Bucket creation and upload
+
+
+# Created Already:
+BUCKET=clientpresentation
+
+# New Account:
+BUCKET=sl-burnertemp6
+
+  aws s3api create-bucket --acl private --bucket ${BUCKET} --region us-east-1 --create-bucket-configuration LocationConstraint=us-east-1	
+  aws ec2 create-key-pair --key-name ${BUCKET}-temp --query 'KeyMaterial' --output text > ~/Documents/SSL/${BUCKET}-temp.pem
+  chmod 600 ~/Documents/SSL/${BUCKET}-temp.pem
+  aws s3 cp ~/Documents/src/CF\ Templates/CF.IAM.yaml s3://${BUCKET}/
+  aws s3 cp ~/Documents/src/CF\ Templates/CF.VPC.yaml s3://${BUCKET}/
+  aws s3 cp ~/Documents/src/CF\ Templates/DataGen\ to\ Postgres/CF.IAM.Cognito.json s3://${BUCKET}/
+  aws s3 cp ~/Documents/src/CF\ Templates/DataGen\ to\ Postgres/CF.KS-Lambda.yaml s3://${BUCKET}/
+  aws s3 cp ~/Documents/src/CF\ Templates/DataGen\ to\ Postgres/datagen-cognito-setup.zip s3://${BUCKET}/
+
+#CF stack creation
+
+  aws cloudformation create-stack --stack-name CF-Client-IAM --template-url https://s3.amazonaws.com/clientpresentation/CF.IAM.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=ClientUserPassword,ParameterValue=123YourMom
+  aws cloudformation create-stack --stack-name CF-Client-VPC --template-url https://s3.amazonaws.com/clientpresentation/CF.VPC.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=ClientKeyPair,ParameterValue=${BUCKET}-temp
+  aws cloudformation create-stack --stack-name CF-Client-IAM-Cognito --template-url https://s3-us-west-2.amazonaws.com/${BUCKET}/CF.IAM.Cognito.json --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=Username,ParameterValue=Kinesis-Cognito-user ParameterKey=Password,ParameterValue=ganges9302Wellness
+  aws cloudformation create-stack --stack-name CF-Client-KinesisStream --template-url https://s3.amazonaws.com/${BUCKET}/CF.KS-Lambda.yaml --capabilities CAPABILITY_NAMED_IAM 
+
+
+
+  aws cloudformation list-stacks
+  aws cloudformation delete-stack --stack-name CF-Client-IAM
+  aws cloudformation update-stack --stack-name CF-Client-VPC --template-url https://s3-us-west-2.amazonaws.com/${BUCKET}/CF.VPC.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=ClientKeyPair,ParameterValue=${BUCKET}-temp
+
+
+#-------------------------------
+aws --region us—east-1 lambda delete-function --function-name Kinesis-to-Postgres
+
+aws lambda create-function \
+--region us-east-1 \
+--function-name Kinesis-to-Postgres \
+--zip-file fileb:///Users/shealutt/Documents/src/Lambdas/Kinesis-to-Postgres/Kinesis-to-Aurorapsql.zip \
+--role arn:aws:iam::308303745136:role/CF-Client-IAM-Cognito-LambdaExecutionRole-A3BGF3GFV0UE \
+--handler lambda_function.lambda_handler \
+--runtime python2.7 \
+--timeout 10 \
+--memory-size 256
+
+
+
+
+
+client=> select * from testdata order by ts asc limit 1;
+  seq  |             ts             | tradeid | firmid  | accountid | clearingfirmid |       ip        | instrument | quantity |  price  
+-------+----------------------------+---------+---------+-----------+----------------+-----------------+------------+----------+---------
+ 28513 | 2017-05-12 16:22:31.155532 | 4909292 | 4042253 |   1100252 |        9230478 | 52.194.163.171  | ge         |      100 | $826.00
+(1 rows)
+
+client=> select * from testdata order by ts desc limit 1;
+  seq  |             ts             | tradeid | firmid  | accountid | clearingfirmid |       ip        | instrument | quantity |  price  
+-------+----------------------------+---------+---------+-----------+----------------+-----------------+------------+----------+---------
+ 65137 | 2017-05-12 16:23:32.296123 | 1820682 | 8858934 |   5710193 |        2523365 | 254.106.159.147 | ge         |       10 | $476.00
+(1 rows)
+
+client=> select count(*) from testdata;
+ count 
+-------
+ 36634
+(1 row)
+
+
+
+
+

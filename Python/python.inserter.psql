@@ -1,0 +1,17 @@
+#from boto import kinesis
+import psycopg2
+
+
+
+conn = psycopg2.connect(host='client.crk8x6geh5ji.us-east-1-beta.rds.amazonaws.com', dbname='client', user='client', password='ganges-9302-Wellness')
+cur = conn.cursor()
+
+
+count = 0
+x = '2,6002978,4924046,9418438,6949100,71.114.74.69,ge,100,165.00'
+sql = 'INSERT INTO testdata (tradeID, firmID, accountID, clearingfirmID, ip, instrument, quantity, price) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+while count < 20000:
+    items = x.split(',')
+    cur.execute(sql, (items[1],items[2],items[3],items[4],items[5],items[6],items[7],items[8]))
+    conn.commit()
+    count += 1

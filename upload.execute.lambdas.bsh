@@ -1,0 +1,11 @@
+#!/bin/bash
+ 
+zip -r lambda.zip .
+ 
+aws lambda update-function-code --function-name AutoR53LambdaFunction --zip-file fileb://lambda.zip --region us-east-1
+ 
+aws lambda invoke --function-name AutoR53LambdaFunction --region us-east-1 --invocation-type RequestResponse --payload '{"sourceIP": "137.182.7.2", }' outputfile.txt
+ 
+cat outputfile.txt
+ 
+echo

@@ -1,0 +1,23 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "An EC2 server."
+Parameters:
+  ClientKeyPair:
+    Description: Amazon EC2 Key Pair
+    Default: t2.micro
+    Type: "AWS::EC2::KeyPair::KeyName"
+
+Resources:
+  PublicEC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: "ami-4836a428"
+      KeyName: !Ref ClientKeyPair
+      InstanceType: "t2.micro"
+      Tags:
+        - Key: Name
+          Value: DeleteMe
+      #SecurityGroups:
+      #- Ref: CF-Client-VPC-SSHSecurityGroup-1CQ1RCOQEVKNB
+      #SubnetId:
+    #    Ref: "Public Subnet A"

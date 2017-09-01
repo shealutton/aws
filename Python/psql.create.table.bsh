@@ -1,0 +1,55 @@
+#!/bin/bash
+# pgpass creation:
+# hostname:port:database:username:password
+
+
+sudo su -
+DBHOST='client.crk8x6geh5ji.us-east-1-beta.rds.amazonaws.com'
+echo "${DBHOST}:5432:client:client:ganges-9302-Wellness" >~/.pgpass
+chmod 600 ~/.pgpass
+
+# Drop and load tables
+yum -y install postgresql95
+psql -h ${DBHOST} -U client -d client -c 'DROP TABLE testdata;'
+#psql -h ${DBHOST} -U client -d client -c 'CREATE TABLE testdata (seq serial, code text, title text, id integer, date_prod date default now(), kind text, len integer);'
+psql -h ${DBHOST} -U client -d client -c 'CREATE TABLE testdata (seq serial, ts timestamp default now(), tradeID integer, firmID integer, accountID integer, clearingfirmID integer, ip inet, instrument text, quantity numeric, price money);'
+psql -h ${DBHOST} -U client -d client
+psql -h ${DBHOST} -U client -d client -c "INSERT INTO testdata (tradeID, firmID, accountID, clearingfirmID, ip, instrument, quantity, price) VALUES ('3906106','8741004','2273180','2273180','182.163.108.191','zn','100','394.00');"
+
+
+
+# Kinesis-Cognito-user
+# ganges9302Wellness
+
+
+psql -h ${DBHOST} -U client -d client -c "INSERT INTO sentiment (twitterId, location, followers, retweets, smile, smilePct, emotion, emotionPct) VALUES ('3906106','8741004','2273180','2273180','182.163.108.191','zn','100','394.00');"
+
+CREATE TABLE sentiment (
+twitterId integer,
+createTime timestamp default now(),
+location integer,
+followers integer,
+retweets integer,
+smile bool,
+smilePct float,
+emotion text,
+emotionPct float
+);
+
+
+select count(*) ts, to_timestamp(floor((extract('epoch' from ts) / 1 )) * 1)
+AT TIME ZONE 'UTC' as interval_alias
+FROM testdata GROUP BY interval_alias order by ts desc limit 10;
+
+
+{{date.now}},{{random.number({"min":1000000,"max":10000000})}},{{random.number({"min":1000000,"max":10000000})}},{{random.number({"min":1000000,"max":10000000})}},{{random.number({"min":1000000,"max":10000000})}},{{internet.ip}},{{random.weightedArrayElement(
+  {
+    "weights": [0.47,0.23,0.14,0.06,0.05,0.02,0.02,0.02],
+    "data": ["ge","zn","zf","ft","zb","zq","ub","tn"]
+  }
+)}},{{random.weightedArrayElement(
+  {
+    "weights": [0.42,0.38,0.15,0.04,0.01],
+    "data": ["1","10","100","1000","10000"]
+  }
+)}},{{commerce.price}}

@@ -1,0 +1,14 @@
+[ 
+  {
+    "ParameterKey": "S3Bucket",
+    "ParameterValue": "pgsecurityprod"
+  },
+  {
+    "ParameterKey": "S3Key",
+    "ParameterValue": "LambdaRootAccessNotification.zip"
+  },
+  {
+    "ParameterKey": "NotificationsEmail",
+    "ParameterValue": "astorga.a@pg.com"
+  }
+]

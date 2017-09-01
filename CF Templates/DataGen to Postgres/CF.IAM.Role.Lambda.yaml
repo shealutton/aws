@@ -1,0 +1,58 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "An IAM user and group"
+Parameters:
+  ClientUserPassword:
+    Description: The password for the ClientUser
+    Type: String
+Resources:
+  ClientUser:
+    Type: "AWS::IAM::User"
+    Properties:
+      Path: "/"
+      LoginProfile:
+        Password:
+          Ref: ClientUserPassword
+      Groups:
+        - !Ref 'ClientGroup'
+      UserName: "ClientUser"
+
+  ClientRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      RoleName: "ClientRole"
+
+  ClientPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      Groups:
+        - !Ref 'ClientGroup'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Resource: "*"
+      PolicyName: "ClientAdminPolicy"
+      Roles:
+        - !Ref 'ClientRole'
+      Users:
+        - !Ref 'ClientUser'
+
+  ClientGroup:
+    Type: "AWS::IAM::Group"
+    Properties:
+      GroupName: "ClientGroup"
+#      GroupName: !Join ['-', [!Ref 'AWS::Region', "ClientGroup"]]
+      Path: "/"

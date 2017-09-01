@@ -1,0 +1,223 @@
+Description: "TMAX CFN template to create the App server and DB server EC2 instances from a baked AMI"
+
+# Any code, applications, scripts, templates, proofs of concept, documentation
+# and other items provided by AWS under this SOW are "AWS Content," as defined
+# in the Agreement, and are provided for illustration purposes only. All such
+# AWS Content is provided solely at the option of AWS, and is subject to the terms
+# of the Addendum and the Agreement. Customer is solely responsible for using,
+# deploying, testing, and supporting any code and applications provided by AWS
+# under this SOW.
+
+#
+# The Parameter section below is for user-defined input fields
+#
+Parameters:
+
+  #
+  # Application server-specific configs
+  #
+  applicationInstanceType:
+    Type: String
+    Default: m4.xlarge
+    Description: Enter the instance type of the application EC2 for this deployment.
+  applicationAmiId:
+    Type: String
+    Default: ami-77e73661
+    Description: Enter the application Linux AMI-ID that you want to deploy.
+  applicationNameTag:
+    Type: String
+    Default: aebdas-tmax01
+    Description: Enter the application Name tag for the EC2 and EBS to be created
+  applicationAzVal:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: AZ in which the instance and EBS volumes will be deployed.
+  applicationSubnetId:
+    Description: 'SubnetId of an existing subnet in your Virtual Private Cloud (VPC).
+      NOTE: The subnet should be part of the AZ selected.'
+    Type: AWS::EC2::Subnet::Id
+  applicationSecurityGroupId:
+    Description: Security Group ID of an existing SG in your Virtual Private Cloud (VPC).
+    Type: AWS::EC2::SecurityGroup::Id
+
+  #
+  # Database server-specific configs
+  #
+  databaseInstanceType:
+    Type: String
+    Default: m4.xlarge
+    Description: Enter the instance type of the database EC2 for this deployment.
+  databaseAmiId:
+    Type: String
+    Default: ami-6fe73679
+    Description: Enter the database Linux AMI-ID that you want to deploy.
+  databaseNameTag:
+    Type: String
+    Default: aebddb-tmax01
+    Description: Enter the database Name tag for the EC2 and EBS to be created
+  databaseAzVal:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: AZ in which the instance and EBS volumes will be deployed.
+  databaseSubnetId:
+    Description: 'SubnetId of an existing subnet in your Virtual Private Cloud (VPC).
+      NOTE: The subnet should be part of the AZ selected.'
+    Type: AWS::EC2::Subnet::Id
+  databaseSecurityGroupId:
+    Description: Security Group ID of an existing SG in your Virtual Private Cloud (VPC).
+    Type: AWS::EC2::SecurityGroup::Id
+
+  #
+  # Configs shared by both Application and Database servers
+  #
+  keyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH/RDP access to EC2 instances
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair.
+    Default: keypairName
+  vpcId:
+    Default: vpc-id
+    Description: vpcId of your existing Virtual Private Cloud (VPC)
+    Type: AWS::EC2::VPC::Id
+  tagApplication:
+    Type: String
+    Default: TMax
+    Description: Please enter the Application tag for the EC2 and EBS to be created
+  tagEnvironment:
+    Type: String
+    Default: Dev
+    Description: Please enter the Environment tag for the EC2 and EBS to be created
+  tagDepartment:
+    Type: String
+    Default: 816
+    Description: Please enter the Department tag for the EC2 and EBS to be created
+  tagDescription:
+    Type: String
+    Default: Mainframe Lift-and-shift application server.
+  tagEbsBackup:
+    Type: String
+    Default: No Backup
+    Description: Please enter the CloudRanger Backup tag for the EBS volumes to be created
+  ec2EbsOptimized:
+    Type: String
+    Default: true
+    AllowedValues: [ false, true ]
+    Description: Specify if you want EBS-optimized instances (not all instance types support this)
+  ec2PlacementGroups:
+    Type: String
+    Default: true
+    AllowedValues: [ false, true ]
+    Description: Specify if you want to place your EC2s into PGs (not all instance types support this)
+  ec2TerminationProtection:
+    Type: String
+    AllowedValues: [ false, true ]
+    Default: false
+  placementGroupName:
+    Type: String
+    Default: dev-tmax01
+
+#
+# The optional Conditions section includes statements that define when a resource
+# is created or when a property is defined. For example, you can compare whether
+# a value is equal to another value. Based on the result of that condition, you
+# can conditionally create resources. 
+#
+Conditions: 
+  CreatePlacementGroups: !Equals [ !Ref ec2PlacementGroups, true ]
+
+#
+# The Resources section contains the actual AWS instances/resources to spin-up
+#
+Resources:
+
+  #
+  # Create a placement group for a low-latency, 10 Gbps network
+  #
+  PlacementGroup:
+    Condition: CreatePlacementGroups
+    Type: AWS::EC2::PlacementGroup
+    Properties:
+      Strategy: cluster
+
+  #
+  # Create the Application server EC2 instance
+  #
+  ApplicationInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      EbsOptimized: !Ref ec2EbsOptimized
+      ImageId: !Ref applicationAmiId
+      InstanceType: !Ref applicationInstanceType
+      Monitoring: true
+      DisableApiTermination: !Ref ec2TerminationProtection
+      PlacementGroupName:
+        !If [CreatePlacementGroups, !Ref PlacementGroup, !Ref "AWS::NoValue"]
+      SecurityGroupIds: [ !Ref applicationSecurityGroupId ]
+      SubnetId: !Ref applicationSubnetId
+      KeyName: !Ref keyName
+      Tags:
+      - Key: Name
+        Value: !Ref applicationNameTag
+      - Key: Application
+        Value: !Ref tagApplication
+      - Key: Environment
+        Value: !Ref tagEnvironment
+      - Key: Department
+        Value: !Ref tagDepartment
+      - Key: Description
+        Value: !Ref tagDescription
+      - Key: Backup
+        Value: !Ref tagEbsBackup
+      BlockDeviceMappings:
+      - DeviceName: /dev/sda1
+        Ebs:
+          DeleteOnTermination: true
+          VolumeSize: 100
+          VolumeType: gp2
+
+  #
+  # Create the Databse server EC2 instance
+  #
+  DatabaseInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      EbsOptimized: !Ref ec2EbsOptimized
+      ImageId: !Ref databaseAmiId
+      InstanceType: !Ref databaseInstanceType
+      Monitoring: true
+      DisableApiTermination: !Ref ec2TerminationProtection
+      PlacementGroupName:
+        !If [CreatePlacementGroups, !Ref PlacementGroup, !Ref "AWS::NoValue"]
+      SecurityGroupIds: [ !Ref databaseSecurityGroupId ]
+      SubnetId: !Ref databaseSubnetId
+      KeyName: !Ref keyName
+      Tags:
+      - Key: Name
+        Value: !Ref databaseNameTag
+      - Key: Application
+        Value: !Ref tagApplication
+      - Key: Environment
+        Value: !Ref tagEnvironment
+      - Key: Department
+        Value: !Ref tagDepartment
+      - Key: Description
+        Value: !Ref tagDescription
+      - Key: Backup
+        Value: !Ref tagEbsBackup
+      BlockDeviceMappings:
+      - DeviceName: /dev/sda1
+        Ebs:
+          DeleteOnTermination: true
+          VolumeSize: 100
+          VolumeType: gp2
+
+#
+# The optional Outputs section declares output values that you can import into
+# other stacks (to create cross-stack references), return in response (to
+# describe stack calls), or view on the AWS CloudFormation console.
+#
+Outputs:
+  ApplicationInstanceId:
+    Value: !Ref ApplicationInstance
+    Description: Instance Id of newly created EC2 instance
+  DatabaseInstanceId:
+    Value: !Ref DatabaseInstance
+    Description: Instance Id of newly created EC2 instance

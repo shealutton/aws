@@ -1,0 +1,6 @@
+### How to aggregate timestamps to the second, useful for counting records per second.
+### To get records per min, replace the 1's with 60's. 
+
+select count(*) ts, to_timestamp(floor((extract('epoch' from ts) / 1 )) * 1)
+AT TIME ZONE 'UTC' as interval_alias
+FROM testdata GROUP BY interval_alias;
