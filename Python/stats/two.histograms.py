@@ -18,6 +18,21 @@ def floatify(x):
         pass
 
 
+def get_name():
+    if '/' in args.file1:
+        name1_temp = args.file1.split('/')
+        name1 = name1_temp[-1]
+    else:
+        name1 = args.file1
+    if '/' in args.file2:
+        name2_temp = args.file2.split('/')
+        name2 = name2_temp[-1]
+    else:
+        name2 = args.file2
+
+    return name1, name2
+
+
 def m_m():
     min_x = min(x)
     min_y = min(y)
@@ -39,14 +54,15 @@ infile2 = open(args.file2, "r")
 for item in infile2.readlines():
     y.append(floatify(item.strip()))
 
+names = get_name()
 min_max = m_m()
 bins = numpy.linspace(min_max[0], min_max[1], 100)
-pyplot.hist(x, bins, alpha=0.5, label='x')
-pyplot.hist(y, bins, alpha=0.5, label='y')
+pyplot.hist(x, bins, alpha=0.5, label=names[0])
+pyplot.hist(y, bins, alpha=0.5, label=names[1])
 pyplot.legend(loc='upper right')
 pyplot.tight_layout()
 pyplot.plot()
 
 fig = pyplot.gcf()
 fig.set_size_inches(18.5, 10.5)
-fig.savefig('histogram.png', dpi=300)
+fig.savefig('histogram.{}.{}.png'.format(names[0], names[1]), dpi=300)

@@ -14,7 +14,8 @@ else:
 
 data = np.loadtxt(infile.readlines())
 
-print('\nStandard Deviation:', np.std(data))
+print('\nSamples:', len(data))
+print('Standard Deviation:', np.std(data))
 print('Percentiles')
 print('  0%', np.percentile(data, 0))
 print(' 10%', np.percentile(data, 10))
