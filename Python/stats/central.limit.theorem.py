@@ -5,7 +5,7 @@ import argparse
 from matplotlib import pyplot
 
 
-parser = argparse.ArgumentParser(description='Postgres Inserter')
+parser = argparse.ArgumentParser(description='Central Limit Theorem')
 parser.add_argument("-p", "--percentile", dest="percentile", help="Eliminate upper bound outliers by specifying a %ile < 100")
 parser.add_argument("-s", "--samplesize", dest="sample", help="The percentile of samples to keep from a distribution")
 parser.add_argument("-f", "--inputfile", dest="infile", help="Input file", required=True)

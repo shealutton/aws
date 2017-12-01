@@ -1,5 +1,9 @@
-from matplotlib.pyplot import *
 from __future__ import print_function
+import matplotlib
+matplotlib.use('Agg')
+
+from matplotlib.pyplot import * 
+#from __future__ import print_function
 from optparse import OptionParser
 import numpy as np
 import sys
@@ -30,3 +34,4 @@ cdf = np.cumsum(counts)
 fig = figure(1, figsize=(10,8))
 plot(bin_edges[1:], cdf)
 fig.savefig('cdf.png', dpi=300)
+
