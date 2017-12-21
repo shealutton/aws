@@ -6,9 +6,9 @@ import psycopg2
 
 
 # db instance ident = client
-# master user = client
-# master pass = ganges-9302-Wellness
-# psql -h client.czoejktismoh.us-east-1.rds.amazonaws.com -U client -d client
+# master user = <your username here>
+# master pass = <your pass here> # If not IAM capable!
+# psql -h hostname -U client -d client
 
 # CREATE TABLE testdata (
 # code char(5),
@@ -19,9 +19,9 @@ import psycopg2
 # len integer);'
 
 
-__author__ = "Shea Lutton, 2016"
-__version__ = "1.0.0"
-__email__ = "shealutton@gmail.com"
+__author__ = "Shea Lutton, 2017"
+__version__ = "1.1.0"
+__email__ = "shealutt@amazon.com"
 
 parser = argparse.ArgumentParser(description='Postgres Inserter')
 parser.add_argument('-s', '--db_server', help='Database server hostname', required=True)

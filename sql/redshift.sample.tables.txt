@@ -1,0 +1,94 @@
+/*Tables with User Reference Data*/
+
+create table region (
+r_regionkey int4 not null primary key,
+r_name char(25) not null,
+r_comment varchar(152) not null
+);
+
+create table nation (
+n_nationkey int4 not null primary key,
+n_name char(25) not null,
+n_regionkey int4 not null references region(r_regionkey),
+n_comment varchar(152) not null
+);
+
+create table customer (
+c_custkey int8 not null *distkey sortkey* primary key,
+c_name varchar(25) not null,
+c_address varchar(40) not null,
+c_nationkey int4 not null references nation(n_nationkey),
+c_phone char(15) not null,
+c_acctbal numeric(12,2) not null,
+c_mktsegment char(10) not null,
+c_comment varchar(117) not null
+);
+
+
+/*Tables with Default Distribution*/
+
+create table orders_nodist (
+o_orderkey int8 not null primary key ,
+o_custkey int8 not null references customer(c_custkey),
+o_orderstatus char(1) not null ,
+o_totalprice numeric(12,2) not null ,
+o_orderdate date not null ,
+o_orderpriority char(15) not null ,
+o_clerk char(15) not null ,
+o_shippriority int4 not null ,
+o_comment varchar(79) not null
+);
+
+create table lineitem_nodist (
+l_orderkey int8 not null primary key ,
+l_partkey int ,
+l_suppkey int ,
+l_linenumber int ,
+l_quantity int ,
+l_extendedprice decimal(13, 2) ,
+l_discount decimal(13, 2) ,
+l_tax decimal(13, 2) ,
+l_returnflag varchar(64) ,
+l_linestatus varchar(64) ,
+l_shipdate datetime ,
+l_commitdate datetime ,
+l_receiptdate datetime ,
+l_shipinstruct varchar(64) ,
+l_shipmode varchar(64) ,
+l_comment varchar(64) ,
+skip varchar(64)
+);
+
+/*Tables with Distribution Key*/
+
+create table orders_dist (
+o_orderkey int8 not null *distkey sortkey* primary key,
+o_custkey int8 not null REFERENCES customer(c_custkey),
+o_orderstatus char(1) not null ,
+o_totalprice numeric(12,2) not null ,
+o_orderdate date not null ,
+o_orderpriority char(15) not null ,
+o_clerk char(15) not null ,
+o_shippriority int4 not null ,
+o_comment varchar(79) not null
+);
+
+create table lineitem_dist (
+l_orderkey int8 not null *distkey sortkey* primary key ,
+l_partkey int ,
+l_suppkey int ,
+l_linenumber int ,
+l_quantity int ,
+l_extendedprice decimal(13, 2) ,
+l_discount decimal(13, 2) ,
+l_tax decimal(13, 2) ,
+l_returnflag varchar(64) ,
+l_linestatus varchar(64) ,
+l_shipdate datetime ,
+l_commitdate datetime ,
+l_receiptdate datetime ,
+l_shipinstruct varchar(64) ,
+l_shipmode varchar(64) ,
+l_comment varchar(64) ,
+skip varchar(64)
+);

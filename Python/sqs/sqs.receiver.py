@@ -4,15 +4,11 @@ import boto3
 import sys
 
 sqs = boto3.client('sqs')
-#response = sqs.list_queues()
-#print(response['QueueUrls'])
-#sys.exit(0)
 
 # Fifo queues have different requirements for keys inside sqs.send_message than Standard Q's. 
-#queue_url = 'https://queue.amazonaws.com/308303745136/SL-test-FQ.fifo'
-queue_url = 'https://queue.amazonaws.com/308303745136/SL-test-SQ'
+queue_url = 'https://queue.amazonaws.com/308303745136/sl_queue.fifo'
 
-while True:
+'''while True:
     response = sqs.receive_message(
         QueueUrl=queue_url,
         AttributeNames=[
@@ -25,18 +21,20 @@ while True:
         VisibilityTimeout=0,
         WaitTimeSeconds=0
     )
+'''
 
-    try:
-        message = response['Messages'][0]
-        receipt_handle = message['ReceiptHandle']
-    except KeyError:
-        print('No messages to receive')
-        sys.exit(1)
+counter = 0
+queue = sqs.
 
-    # Delete received message from queue
-    sqs.delete_message(
-        QueueUrl=queue_url,
-        ReceiptHandle=receipt_handle
-    )
-    print('Received and deleted message: %s' % message)
+# Process messages by printing out body from test Amazon SQS Queue
+for message in queue.receive_messages(QueueUrl=queue_url):
+    counter += 1
+    message.delete()
 
+
+messages = queue.receive_messages()
+for message in messages:
+   print('Body: {0}'.format(message.body))
+   message.delete()
+
+print(counter)

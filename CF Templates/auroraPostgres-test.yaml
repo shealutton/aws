@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Example PostgreSQL RDS Template'
+Parameters:
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+  DBSubnet:
+    Default: subnet-a1e5618d
+    Type: String
+  DBSecurityGroup:
+    Default: sg-44f57235	
+    Description: Security Group Id for the DB
+    Type: String
+  DBName:
+    Default: postgresdb
+    Description: The database name
+    Type: String
+    MinLength: '1'
+    MaxLength: '63'
+    AllowedPattern: '[a-zA-Z0-9]+'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  DBUsername:
+    Default: superuser
+    NoEcho: 'true'
+    Description: The database admin account username
+    Type: String
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z0-9]+'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric
+      characters.
+  DBPassword:
+    Default: r3placeme
+    NoEcho: 'true'
+    Description: The database admin account password
+    Type: String
+    MinLength: '8'
+  DBClass:
+    Default: db.r4.large
+    Description: Database instance class
+    Type: String
+    AllowedValues: [db.r4.large]
+    ConstraintDescription: must select a valid database instance type.
+
+
+Resources:
+
+  DatabaseCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      Engine: aurora-postgresql
+      # Without the CF will try to use MySQL parameters and fail
+      DBClusterParameterGroupName: default.aurora-postgresql9.6
+      DatabaseName: main
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      Port: 5432
+      # DBSubnetGroupName: !Ref DBSubnet
+      VpcSecurityGroupIds:
+        - !Ref DBSecurityGroup
+ 
+  PrimaryDatabase:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: aurora-postgresql
+      DBClusterIdentifier: !Ref DatabaseCluster
+      # DBSubnetGroupName: !Ref DBSubnet
+      DBInstanceClass: !Ref DBClass

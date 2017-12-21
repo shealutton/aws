@@ -1,0 +1,16 @@
+Redshift performance considerations
+	column oriented store (not row oriented)
+	The impacting decisions:
+		1. Carefully set Primary and Foreign keys. They help Redshift distribute data to slices in logical, performant ways. NOTE that uniqueness constraints ARE NOT ENFORCED!!! Duplicate rows are tolerated and will give false results, so be sure data input sources are clean and constraint aware. 
+		2. Choosing a data distribution model is super important. Data can be on ALL nodes, EVENly distributed (round-robin), or based on a KEY (organized by one key column). 
+		3. How your data is sorted. Sorting data into similar buckets means the data can be in fewer 1MB blocks on disk. Fewer block reads means faster performance. IE if you have data that is often queried by date, then sort your data by date. IE "SELECT user, name, time WHERE time > 'today';" 
+		4. Compression will be chosen for you, but it also plays a major role in performance. 
+		5. Redshift cluster node type and number
+		6. Memory is the most critical component of Redshift. Do whatever you can to optimize for memory (compress, distribute, etc) or move to bigger sized instances. 
+		7. Managing concurrent user queries is important. Ram is divided by the number of total slots across all queues. Max 5 connections in 1 queue by default, so each individual query gets 1/5th the ram. Your queries can request using more than 1 slot at a time. Request two slots, you get 40%. You should create at a minimum two queues of slots, one for small & fast queries, one for big & slow queries. The order of queues matters, the default queue should come last. 
+			a. Queue 1, 3 slots, query_group = fast_reports
+			b. Queue 2, 5 slots, query_group = slow_reports
+			Each query will receive 1/8th the total ram. You can request that your query use more than one slot. 
+
+	Redshift is based on Postgres 8.0.x. However it has been heavily modified, DON'T USE Postgres documentation for Redshift. 
+	For common joins, it can be helpful to create new tables comprised from the underlying data. This can help with performance because you can sort/distribute it in new ways. 
